@@ -1,16 +1,4 @@
 apiVersion: apps/v1
-kind: service
-metadata:
-  name: poc-helm-flux2
-spec:
-  type: ClusterIP
-  ports:
-  - port: 80
-    targetPort: 8080
-  selector:
-    app: poc-helm-flux2
----
-apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: poc-helm-flux2
