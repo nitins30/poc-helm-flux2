@@ -3,31 +3,74 @@ kind: Deployment
 metadata:
   name: poc-helm-flux2
 spec:
-  replicas: 3
+  minReadySeconds: 3
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 60
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+    type: RollingUpdate
   selector:
     matchLabels:
       app: poc-helm-flux2
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9797"
       labels:
         app: poc-helm-flux2
     spec:
       containers:
-      - name: hello-kubernetes
+      - name: poc-helm-flux2
         image: artifactory.wdc.com:6569/bdap-edge-fieldlogs/sftp-fieldlogs-collector:2.0.4
         command: ["java"]
         args: ["-cp", "/app/resources:/app/classes:/app/libs/*", "com.wdc.bdp.edge.fieldlogs.config.FieldLogServer"]
+        imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 8080
+        - name: http
+          containerPort: 9898
+          protocol: TCP
+        - name: http-metrics
+          containerPort: 9797
+          protocol: TCP
+        - name: grpc
+          containerPort: 9999
+          protocol: TCP
+        command:
+        - ./podinfo
+        - --port=9898
+        - --port-metrics=9797
+        - --grpc-port=9999
+        - --grpc-service-name=podinfo
+        - --level=info
+        - --random-delay=false
+        - --random-error=false
         env:
-        - name: MESSAGE  
-          value: Hello from the first deployment!
-        - name: SCHEDULED_INTERVAL
-          value: "120000"
-        - name: COLLECTOR_TYPE
-          value: REPAIR
-        - name: ENV
-          value: dev
-        - name: CLUSTER
-          value: dev
-
+        - name: PODINFO_UI_COLOR
+          value: "#34577c"
+        livenessProbe:
+          exec:
+            command:
+            - podcli
+            - check
+            - http
+            - localhost:9898/healthz
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+            - podcli
+            - check
+            - http
+            - localhost:9898/readyz
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
