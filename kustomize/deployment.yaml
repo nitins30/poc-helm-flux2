@@ -45,9 +45,9 @@ spec:
         - name: COLLECTOR_TYPE
           value: REPAIR
         - name: ENV
-          value: {{ .Values.env }}
+          value: dev
         - name: CLUSTER
-          value: {{ .Values.cluster }}
+          value: dev
         livenessProbe:
           exec:
             command:
