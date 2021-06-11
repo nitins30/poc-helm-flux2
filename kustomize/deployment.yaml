@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   name: poc-helm-flux2
 spec:
+  replicas: 1
   minReadySeconds: 3
   revisionHistoryLimit: 5
   progressDeadlineSeconds: 60
